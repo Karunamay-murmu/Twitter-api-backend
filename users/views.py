@@ -23,4 +23,5 @@ class GetUserByUsername(View):
         response = requests.request(
             method="GET", url=url, headers=REQUEST_HEADER, params=params
         )
+        # print(response)
         return JsonResponse(response.json())
