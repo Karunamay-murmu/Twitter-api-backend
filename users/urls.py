@@ -1,10 +1,10 @@
 from django.urls import path
 
 from users.views import (
-    GetUserByUsername, 
     GetUserTweetById, 
     SearchUserByQuery,
-    UserShow
+    UserShow,
+    user_by_username
 )
 
 app_name = "users"
@@ -12,7 +12,7 @@ app_name = "users"
 urlpatterns = [
     path(
         "by/username/<str:username>",
-        GetUserByUsername.as_view(),
+        user_by_username,
         name="get_user_by_username",
     ),
     path("<int:id>/tweets", GetUserTweetById.as_view(), name="get_user_tweets"),

@@ -17,7 +17,7 @@ class Api:
         return url
 
     @classmethod
-    def get_user_tweets_by_id(self, id):
+    def get_user_tweets(self, id):
         endpoint = "/users/{}/tweets".format(id)
         url = self.BASE_URL + endpoint
         return url
@@ -28,12 +28,13 @@ class Api:
         url = self.BASE_URL + endpoint
         return url
 
+    # v1 endpoints
     @classmethod
     def search_users(self):
         return self.BASE_URL_V1 + USERS_SEARCH
 
     @classmethod
-    def users_show(self):
+    def show_user(self):
         return self.BASE_URL_V1 + USERS_SHOW
 
     @classmethod
