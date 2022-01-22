@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render
 from django.views import View
 from django.http.response import JsonResponse
@@ -5,45 +6,139 @@ from django.http.response import JsonResponse
 from request.api import Api
 from request.requests import Request
 
-async def user_timeline(request):
-    endpoint_v1 = Api.users_timeline()
-    endpoint_v2 = Api.get_user_tweets(request.GET.get("user_id"))
-
-    params_v1 = {
-        "tweet_mode": "extended",
-        # "exclude_replies": "true",
-        "trim_user": "true",
+async def tweet_lookup(request, id):
+    url = Api.tweet_lookup(id)
+    params = {
+        "tweet.fields": "id,text,author_id,created_at,in_reply_to_user_id,conversation_id,lang,referenced_tweets",
+        "expansions": "author_id,in_reply_to_user_id,referenced_tweets.id,referenced_tweets.id.author_id",
+        "user.fields": "name,username",
     }
-    if "user_id" in request.GET:
-        params_v1["user_id"] = request.GET.get("user_id")
-    else:
-        params_v1["screen_name"] = request.GET.get("screen_name")
+    # params = {
+    #     "tweet.fields": "id,text,attachments,author_id,context_annotations,created_at,entities,in_reply_to_user_id,conversation_id,lang,public_metrics,referenced_tweets,reply_settings,source",
+    #     "expansions": "author_id,referenced_tweets.id,referenced_tweets.id.author_id,attachments.media_keys",
+    #     "media.fields": "duration_ms,height,media_key,preview_image_url,type,url,width,public_metrics",
+    #     "user.fields": "created_at,location,profile_image_url,public_metrics,url,verified,description,entities,pinned_tweet_id",
+    # }
+    options = {
+        "params": params,
+    }
+    response = await Request.make(url, options)
+    if response["status"] == 200:
+        return JsonResponse(response["response"], safe=False, status=200)
+    return JsonResponse({
+        "error": {
+            "message": "Error occured while fetching data",
+            "status": 500
+        }
+    }, status=500)
 
-    params_v2 = {
-        "tweet.fields": "id,text,attachments,author_id,context_annotations,created_at,entities,in_reply_to_user_id,lang,public_metrics,referenced_tweets,reply_settings,source",
-        "expansions": "author_id,in_reply_to_user_id,referenced_tweets.id.author_id,attachments.media_keys",
-        "max_results": 20,
+
+async def tweets_lookup(request):
+    url = Api.tweets_lookup([1482375313598423043])
+    params = {
+        "tweet.fields": "id,text,author_id,created_at,in_reply_to_user_id,conversation_id,lang,referenced_tweets",
+        "expansions": "author_id,in_reply_to_user_id,referenced_tweets.id,referenced_tweets.id.author_id",
+        "user.fields": "name,username",
+    }
+    options = {
+        "params": params,
+    }
+    response = await Request.make(url, options)
+    if response["status"] == 200:
+        return JsonResponse(response["response"], safe=False, status=200)
+    return JsonResponse({
+        "error": {
+            "message": "Error occured while fetching data",
+            "status": 500
+        }
+    }, status=500)
+
+async def user_timeline(request, id):
+    url = Api.user_timeline(id)
+    params = {
+        "tweet.fields": "id,text,attachments,author_id,context_annotations,created_at,entities,in_reply_to_user_id,conversation_id,lang,public_metrics,referenced_tweets,reply_settings,source",
+        "expansions": "author_id,referenced_tweets.id,referenced_tweets.id.author_id,attachments.media_keys",
         "media.fields": "duration_ms,height,media_key,preview_image_url,type,url,width,public_metrics",
+        "user.fields": "created_at,location,profile_image_url,public_metrics,url,verified,description,entities,pinned_tweet_id",
+        "exclude": "replies",
     }
-
-    options_v1 = {
-        "params": params_v1,
+    options = {
+        "params": params,
     }
-    options_v2 = {
-        "params": params_v2,
-    }
-    # response_v1 = await Request.make(endpoint_v1, options_v1)
-    response_v2 = await Request.make(endpoint_v2, options_v2)
+    response_v2 = await Request.make(url, options)
+    # try:
+    #     tweets = response_v2["response"]["data"]
+    #     tweets_id = []
+    #     for tweet in tweets:
+    #         tweets_id.append(tweet["id"])
+    #     ref_tweets = response_v2["response"]["includes"]["tweets"]
 
-    # print(len(response_v2["data"]))
-    # print(len(response_v1))
-    # for idx, tweet in enumerate(response_v2["data"]):
-    #     print(tweet["id"])
-    #     print(response_v1[idx]["id_str"])
-    #     if tweet["id"] == response_v1[idx]["id_str"]:
-    #         response_v2["data"][idx]["extend_entites"] = response_v1[idx].get("extended_entities", None)
-    # print(len(respo))
-    # response = response_v1.update(response_v2)
-    # print(response)
-    return JsonResponse(response_v2, safe=False)
+    #     # async def collect_ref_tweets(ref_tweets):
+    #     ids = []
+    #     for tweet in ref_tweets:
+    #         if "referenced_tweets" in tweet:
+    #             for ref in tweet["referenced_tweets"]:
+    #                 id = ref["id"]
+    #                 if id not in tweets_id:
+    #                     ids.append(ref["id"])
+    #     if len(ids) > 0:
+    #         url = Api.tweets_lookup(ids)
+    #         options = {
+    #             "params": params,
+    #         }
+    #         response = await Request.make(url, options)
+    #         if response["status"] == 200:
+    #             print(response["response"]["data"])
+    #             response_v2["response"]["data"].append(*response["response"]["data"])
+    #             response_v2["response"]["includes"]["users"].append(*response["response"]["includes"]["users"])
+    #             response_v2["response"]["includes"]["tweets"].append(*response["response"]["includes"]["tweets"])
+    #         else:
+    #             pass
+    #     return JsonResponse(response["response"], safe=False, status=200)
+    #     # await collect_ref_tweets(ref_tweets)
+    # except Exception:
+    #     print("error")
+    #     pass
+    if response_v2["status"] == 200:
+        return JsonResponse(response_v2["response"], safe=False, status=200)
+    return JsonResponse({
+        "error": {
+            "message": "Error occured while fetching data",
+            "status": 500
+        }
+    }, status=500)
 
+
+   # try:
+    #     tweets = response_v2["response"]["data"]
+    #     tweets_id = []
+    #     for tweet in tweets:
+    #         tweets_id.append(tweet["id"])
+    #     ref_tweets = response_v2["response"]["includes"]["tweets"]
+
+    #     # async def collect_ref_tweets(ref_tweets):
+    #     ids = []
+    #     for tweet in ref_tweets:
+    #         if "referenced_tweets" in tweet:
+    #             for ref in tweet["referenced_tweets"]:
+    #                 id = ref["id"]
+    #                 if id not in tweets_id:
+    #                     ids.append(ref["id"])
+    #     if len(ids) > 0:
+    #         url = Api.tweets_lookup(ids)
+    #         options = {
+    #             "params": params,
+    #         }
+    #         response = await Request.make(url, options)
+    #         if response["status"] == 200:
+    #             print(response["response"]["data"])
+    #             response_v2["response"]["data"].append(*response["response"]["data"])
+    #             response_v2["response"]["includes"]["users"].append(*response["response"]["includes"]["users"])
+    #             response_v2["response"]["includes"]["tweets"].append(*response["response"]["includes"]["tweets"])
+    #         else:
+    #             pass
+    #     return JsonResponse(response["response"], safe=False, status=200)
+    #     # await collect_ref_tweets(ref_tweets)
+    # except Exception:
+    #     print("error")
+    #     pass

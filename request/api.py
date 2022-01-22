@@ -17,16 +17,31 @@ class Api:
         return url
 
     @classmethod
-    def get_user_tweets(self, id):
+    def user_timeline(self, id):
         endpoint = "/users/{}/tweets".format(id)
-        url = self.BASE_URL + endpoint
-        return url
+        return self.BASE_URL + endpoint
 
+    @classmethod
+    def user_liked_tweets(self, id):
+        return self.BASE_URL + "/users/{}/liked_tweets".format(id)
+
+
+    @classmethod
+    def tweets_lookup(self, ids):
+        param = ",".join(str(id) for id in ids)
+        endpoint = "/tweets?ids={}".format(param)
+        return self.BASE_URL + endpoint
+
+    @classmethod
+    def tweet_lookup(self, id):
+        return self.BASE_URL + "/tweets/{}".format(id)
+        
     @classmethod
     def get_user_mentions_by_id(self, id):
         endpoint = "/users/{}/mentions".format(id)
         url = self.BASE_URL + endpoint
         return url
+
 
     # v1 endpoints
     @classmethod

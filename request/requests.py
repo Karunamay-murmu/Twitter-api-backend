@@ -8,7 +8,6 @@ from django.conf import settings
 from requests_oauthlib import OAuth1
 
 
-
 class Request:
 
     options = {
@@ -18,7 +17,7 @@ class Request:
         "headers": {
             "Authorization": f"Bearer {settings.TWITTER_API_BEARER_TOKEN}",
         },
-        "timeout": 10,
+        "timeout": 20,
     }
 
     auth = OAuth1(
@@ -32,15 +31,28 @@ class Request:
     def make(self, url, extra_options=None):
         for (k, v) in extra_options.items():
             self.options[k] = v
+
         async def fetch_data():
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.request(**self.options, url=url) as response:
                         res = await response.json()
                         if response.status == 200:
-                            return res
+                            return {
+                                "response": res,
+                                "status": response.status,
+                            }
                         else:
-                            return res["errors"]
+                            return {
+                                "error": res["errors"],
+                                "status": response.status,
+                            }
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                return {
+                    "message": "Error occured while fetching data",
+                    "status": 500,
+                }
+
             finally:
                 await session.close()
         return fetch_data()
