@@ -46,7 +46,8 @@ async def user_by_username(request, username):
             tweet_endpoint = Api.tweet_lookup(pinned_tweet_id)
             pinned_tweet = await Request.make(tweet_endpoint, pinned_tweet_options)
             response_v2["response"]["pinned_tweet"] = pinned_tweet["response"]
-        response_v2["response"]["data"]["profile_banner_url"] = response_v1["response"]["profile_banner_url"]
+        response_v2["response"]["data"]["profile_banner_url"] = response_v1["response"].get(
+            "profile_banner_url", None)
         return JsonResponse(response_v2["response"], safe=False, status=200)
     return JsonResponse({
         "error": {
@@ -64,8 +65,26 @@ async def user_liked_tweets(request, id):
             "expansions": "author_id,referenced_tweets.id,referenced_tweets.id.author_id,attachments.media_keys,entities.mentions.username",
             "media.fields": "duration_ms,height,media_key,preview_image_url,type,url,width,public_metrics",
             "user.fields": "created_at,location,profile_image_url,public_metrics,url,verified,description,entities,pinned_tweet_id",
-            "max_results": 10,
+            "max_results": 30,
         }
+    }
+    response = await Request.make(url, options)
+    if response["status"] == 200:
+        return JsonResponse(response["response"], safe=False, status=200)
+    return JsonResponse({
+        "error": {
+            "message": "Error occured while fetching data",
+            "status": 500
+        }
+    }, status=500)
+
+
+async def user_followers(request, id, path):
+    url = Api.user_followers(path, id)
+    options = {
+        "params": {
+            "user.fields": "created_at,location,profile_image_url,public_metrics,url,verified,description,entities,pinned_tweet_id",
+        },
     }
     response = await Request.make(url, options)
     if response["status"] == 200:

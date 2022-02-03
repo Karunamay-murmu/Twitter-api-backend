@@ -17,6 +17,18 @@ class Api:
         return url
 
     @classmethod
+    def user_followers(self, path, id):
+        endpoint = "/users/{}/{}".format(id, path)
+        url = self.BASE_URL + endpoint
+        return url
+
+    @classmethod
+    def user_following(self, id):
+        endpoint = "/users/{}/following".format(id)
+        url = self.BASE_URL + endpoint
+        return url
+
+    @classmethod
     def user_timeline(self, id):
         endpoint = "/users/{}/tweets".format(id)
         return self.BASE_URL + endpoint
@@ -24,7 +36,6 @@ class Api:
     @classmethod
     def user_liked_tweets(self, id):
         return self.BASE_URL + "/users/{}/liked_tweets".format(id)
-
 
     @classmethod
     def tweets_lookup(self, ids):
@@ -41,6 +52,11 @@ class Api:
         endpoint = "/users/{}/mentions".format(id)
         url = self.BASE_URL + endpoint
         return url
+
+    @classmethod
+    def tweet_search(self):
+        endpoint = "/tweets/search/recent"
+        return self.BASE_URL + endpoint
 
 
     # v1 endpoints
