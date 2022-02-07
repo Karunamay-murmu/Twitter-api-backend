@@ -71,3 +71,7 @@ class Api:
     @classmethod
     def users_timeline(self):
         return self.BASE_URL_V1 + USERS_TIMELINE
+
+    @classmethod
+    def users_home_timeline(self):
+        return self.BASE_URL_V1 + "/statuses/home_timeline.json"

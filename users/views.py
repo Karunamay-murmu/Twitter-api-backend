@@ -57,6 +57,10 @@ async def user_by_username(request, username):
     }, status=500)
 
 
+# async def authenticated_user(request):
+
+
+
 async def user_liked_tweets(request, id):
     url = Api.user_liked_tweets(id)
     options = {
@@ -95,6 +99,14 @@ async def user_followers(request, id, path):
             "status": 500
         }
     }, status=500)
+
+
+async def user_home_timeline(request, id):
+    url = Api.user_home_timeline(id)
+    options = {
+        "params": {
+        }
+    }
 
 
 class GetUserTweetById(View):

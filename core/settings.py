@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     "corsheaders",
     # Application
     "users",
+    "authentication",
+    "tweets",
 ]
 
 MIDDLEWARE = [
@@ -137,8 +139,15 @@ TWITTER_API_BASE_URL_V1 = str(os.getenv("TWITTER_API_BASE_URL_V1"))
 
 OAUTH_NONCE = str(os.getenv("OAUTH_NONCE"))
 
+OAUTH_CLIENT_ID = str(os.getenv("OAUTH2.0_CLIENT_ID"))
+OAUTH_CLIENT_SECRET = str(os.getenv("OAUTH2.0_CLIENT_SECRET"))
+OAUTH_REDIRECT_URI = str(os.getenv("OAUTH2.0_REDIRECT_URI"))
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
+
+# username=admin
+# email=admin@gmail.com
+# password=admin
