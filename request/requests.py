@@ -35,7 +35,10 @@ class Request:
         async def fetch_data():
             try:
                 async with aiohttp.ClientSession() as session:
+                    print(self.options)
+                    print(url)
                     async with session.request(**self.options, url=url) as response:
+                        print(response)
                         res = await response.json()
                         if response.status == 200:
                             return {

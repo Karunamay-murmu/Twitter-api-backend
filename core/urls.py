@@ -6,5 +6,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("2/users/", include("users.urls")),
     path("2/tweets/", include("tweets.urls")),
-    path("oauth2/", include("authentication.urls")),
+    path("2/oauth2/", include("authentication.urls")),
 ]

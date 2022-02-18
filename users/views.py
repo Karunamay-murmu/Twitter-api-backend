@@ -1,13 +1,20 @@
 import asyncio
+import re
+import json
+import urllib.parse
+from unicodedata import name
 from requests_oauthlib import OAuth1
 
 from django.views import View
 from django.http import JsonResponse, response
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.middleware.csrf import get_token
+from asgiref.sync import async_to_sync, sync_to_async
 
 from request.api import Api
 from request.requests import Request
-
+from users.models import Account
 
 # Create your views here.
 
@@ -46,19 +53,14 @@ async def user_by_username(request, username):
             tweet_endpoint = Api.tweet_lookup(pinned_tweet_id)
             pinned_tweet = await Request.make(tweet_endpoint, pinned_tweet_options)
             response_v2["response"]["pinned_tweet"] = pinned_tweet["response"]
-        response_v2["response"]["data"]["profile_banner_url"] = response_v1["response"].get(
-            "profile_banner_url", None)
+        response_v2["response"]["data"]["profile_banner_url"] = response_v1[
+            "response"
+        ].get("profile_banner_url", None)
         return JsonResponse(response_v2["response"], safe=False, status=200)
-    return JsonResponse({
-        "error": {
-            "message": "Error occured while fetching data",
-            "status": 500
-        }
-    }, status=500)
-
-
-# async def authenticated_user(request):
-
+    return JsonResponse(
+        {"error": {"message": "Error occured while fetching data", "status": 500}},
+        status=500,
+    )
 
 
 async def user_liked_tweets(request, id):
@@ -75,12 +77,10 @@ async def user_liked_tweets(request, id):
     response = await Request.make(url, options)
     if response["status"] == 200:
         return JsonResponse(response["response"], safe=False, status=200)
-    return JsonResponse({
-        "error": {
-            "message": "Error occured while fetching data",
-            "status": 500
-        }
-    }, status=500)
+    return JsonResponse(
+        {"error": {"message": "Error occured while fetching data", "status": 500}},
+        status=500,
+    )
 
 
 async def user_followers(request, id, path):
@@ -93,20 +93,53 @@ async def user_followers(request, id, path):
     response = await Request.make(url, options)
     if response["status"] == 200:
         return JsonResponse(response["response"], safe=False, status=200)
-    return JsonResponse({
-        "error": {
-            "message": "Error occured while fetching data",
-            "status": 500
-        }
-    }, status=500)
+    return JsonResponse(
+        {"error": {"message": "Error occured while fetching data", "status": 500}},
+        status=500,
+    )
 
 
-async def user_home_timeline(request, id):
-    url = Api.user_home_timeline(id)
-    options = {
-        "params": {
-        }
-    }
+# TODO: DONT MAKE REQUEST UNTIL WHOAMI IS CALLED :TODO
+async def user_data(request, sub):
+    if request.method == "GET":
+        url = f"{settings.AUTH0_DOMAIN}/api/v2/users/{sub}"
+        id = sub.split("|")[1]
+        try:
+            user = await sync_to_async(Account.objects.get, thread_sensitive=True)(
+                twitter_user_id=id
+            )
+        except Account.DoesNotExist:
+            response = await Request.make(
+                url,
+                {
+                    "headers": {
+                        "Authorization": f"Bearer {settings.AUTH0_API_TOKEN}",
+                        "Content-Type": "application/json charset=utf-8",
+                    }
+                },
+            )
+            if response["status"] == 200:
+                res = response["response"]
+                nickname = res.get("nickname", None)
+                name = res.get("name", None)
+                picture = res.get("picture", None)
+                ip = res.get("last_ip", None)
+                screen_name = res.get("screen_name", None)
+                twitter_user_id = res["identities"][0]["user_id"]
+                access_token = res["identities"][0]["access_token"]
+                user = await sync_to_async(Account.objects.create, thread_sensitive=True)(
+                    nickname=nickname,
+                    name=name,
+                    picture=picture,
+                    twitter_user_id=twitter_user_id,
+                    access_token=access_token,
+                    last_ip=ip,
+                    screen_name=screen_name,
+                )
+        return JsonResponse({"user": user.to_dict()}, safe=False, status=200)
+    return JsonResponse(
+        {"error": {"message": "Bad request", "status": 401}}, status=200
+    )
 
 
 class GetUserTweetById(View):
@@ -167,3 +200,8 @@ class UserShow(View):
         }
         response = Request.make(endpoint, options)
         return JsonResponse(response)
+
+
+def get_csrf_token(request):
+    csrf_token = get_token(request)
+    return JsonResponse({"csrf_token": csrf_token}, safe=False, status=200)

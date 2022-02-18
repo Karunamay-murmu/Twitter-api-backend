@@ -40,8 +40,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -129,8 +129,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 TWITTER_API_KEY = str(os.getenv("TWITTER_API_KEY"))
 TWITTER_API_SECRET_KEY = str(os.getenv("TWITTER_API_SECRET_KEY"))
-TWITTER_ACCESS_TOKEN=str(os.getenv("TWITTER_ACCESS_TOKEN"))
-TWITTER_ACCESS_TOKEN_SECRET=str(os.getenv("TWITTER_ACCESS_TOKEN_SECRET"))
+TWITTER_ACCESS_TOKEN = str(os.getenv("TWITTER_ACCESS_TOKEN"))
+TWITTER_ACCESS_TOKEN_SECRET = str(os.getenv("TWITTER_ACCESS_TOKEN_SECRET"))
 
 TWITTER_API_BEARER_TOKEN = str(os.getenv("TWITTER_API_BEARER_TOKEN"))
 
@@ -139,15 +139,23 @@ TWITTER_API_BASE_URL_V1 = str(os.getenv("TWITTER_API_BASE_URL_V1"))
 
 OAUTH_NONCE = str(os.getenv("OAUTH_NONCE"))
 
-OAUTH_CLIENT_ID = str(os.getenv("OAUTH2.0_CLIENT_ID"))
-OAUTH_CLIENT_SECRET = str(os.getenv("OAUTH2.0_CLIENT_SECRET"))
-OAUTH_REDIRECT_URI = str(os.getenv("OAUTH2.0_REDIRECT_URI"))
+OAUTH_CLIENT_ID = str(os.getenv("OAUTH_CLIENT_ID"))
+OAUTH_CLIENT_SECRET = str(os.getenv("OAUTH_CLIENT_SECRET"))
+OAUTH_REDIRECT_URI = str(os.getenv("OAUTH_REDIRECT_URI"))
+
+AUTH0_DOMAIN = str(os.getenv("AUTH0_DOMAIN"))
+AUTH0_API_TOKEN = str(os.getenv("AUTH0_API_TOKEN"))
 
 # CORS
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+CORS_ORIGIN_WHITELIST = ["http://localhost:3000"]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "localhost:3000",
 ]
-
 # username=admin
 # email=admin@gmail.com
 # password=admin
