@@ -32,11 +32,28 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    # "social_django",
+    "rest_framework",
+    "rest_framework_jwt",
+    "rest_framework_jwt.blacklist",
     # Application
     "users",
     "authentication",
     "tweets",
 ]
+
+# apiexample/settings.py
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ),
+}
+
+# apiexample/settings.py
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -45,9 +62,26 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.auth.middleware.RemoteUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "authentication.middleware.AuthorizationMiddleware"
 ]
+
+# apiexample/settings.py
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.RemoteUserBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+# AUTHENTICATION_BACKENDS = {
+#     "authentication.auth_backend.Auth0",
+#     "django.contrib.auth.backends.ModelBackend",
+# }
+
+LOGIN_URL = "/login/auth0"
+LOGIN_REDIRECT_URL = "/dashboard"
 
 ROOT_URLCONF = "core.urls"
 
@@ -125,6 +159,13 @@ STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     )
+# }
+
+
 # Twitter api credentials
 
 TWITTER_API_KEY = str(os.getenv("TWITTER_API_KEY"))
@@ -143,14 +184,20 @@ OAUTH_CLIENT_ID = str(os.getenv("OAUTH_CLIENT_ID"))
 OAUTH_CLIENT_SECRET = str(os.getenv("OAUTH_CLIENT_SECRET"))
 OAUTH_REDIRECT_URI = str(os.getenv("OAUTH_REDIRECT_URI"))
 
-AUTH0_DOMAIN = str(os.getenv("AUTH0_DOMAIN"))
-AUTH0_API_TOKEN = str(os.getenv("AUTH0_API_TOKEN"))
 
-# CORS
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+# Auth0 settings
+# SOCIAL_AUTH_TRAILING_SLASH = False
+SOCIAL_AUTH_AUTH0_DOMAIN = str(os.getenv("AUTH0_DOMAIN"))
+SOCIAL_AUTH_AUTH0_AUDIENCE = str(os.getenv("AUTH0_API_AUDIENCE"))
+SOCIAL_AUTH_AUTH0_API_TOKEN = str(os.getenv("AUTH0_API_TOKEN"))
+SOCIAL_AUTH_AUTH0_KEY = str(os.getenv("AUTH0_CLIENT_ID"))
+SOCIAL_AUTH_AUTH0_SECRET = str(os.getenv("AUTH0_CLIENT_SECRET"))
+
+
+# webappexample\settings.py
+SOCIAL_AUTH_AUTH0_SCOPE = ["openid", "profile", "email"]
+
+# CORS settings
 CORS_ORIGIN_WHITELIST = ["http://localhost:3000"]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
@@ -159,3 +206,21 @@ CSRF_TRUSTED_ORIGINS = [
 # username=admin
 # email=admin@gmail.com
 # password=admin
+
+# JWT_AUTH = {
+#     "JWT_PAYLOAD_GET_USERNAME_HANDLER": "authentication.utils.jwt_get_username_from_payload_handler",
+#     "JWT_DECODE_HANDLER": "authentication.utils.jwt_decode_token",
+#     "JWT_ALGORITHM": "RS256",
+#     "JWT_AUDIENCE": "https://django-twitter2.0/api",
+#     "JWT_ISSUER": SOCIAL_AUTH_AUTH0_DOMAIN,
+#     "JWT_AUTH_HEADER_PREFIX": "Bearer",
+# }
+
+JWT_AUTH = {
+    "JWT_PAYLOAD_GET_USERNAME_HANDLER": "authentication.utils.jwt_get_username_from_payload_handler",
+    "JWT_DECODE_HANDLER": "authentication.utils.jwt_decode_token",
+    "JWT_ALGORITHM": "RS256",
+    "JWT_AUDIENCE": "https://django-twitter2.0/api",
+    "JWT_ISSUER": SOCIAL_AUTH_AUTH0_DOMAIN,
+    "JWT_AUTH_HEADER_PREFIX": "Bearer",
+}

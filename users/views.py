@@ -1,20 +1,17 @@
-import asyncio
-import re
 import json
-import urllib.parse
-from unicodedata import name
-from requests_oauthlib import OAuth1
+from os import access
+from urllib import response
 
 from django.views import View
-from django.http import JsonResponse, response
+from django.http import JsonResponse, HttpResponse
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.middleware.csrf import get_token
-from asgiref.sync import async_to_sync, sync_to_async
+from asgiref.sync import sync_to_async
 
 from request.api import Api
 from request.requests import Request
 from users.models import Account
+from tweets.views import tweet_lookup
 
 # Create your views here.
 
@@ -24,7 +21,7 @@ BASE_URL_V1 = settings.TWITTER_API_BASE_URL_V1
 
 async def user_by_username(request, username):
     endpoint_v1 = Api.show_user()
-    endpoint_v2 = Api.get_user_by_username(username)
+    endpoint_v2 = Api.user_by_username(username)
 
     options_v2 = {
         "params": {
@@ -42,17 +39,10 @@ async def user_by_username(request, username):
 
     if response_v1["status"] == 200 and response_v2["status"] == 200:
         if "pinned_tweet_id" in response_v2["response"]["data"]:
-            pinned_tweet_options = {
-                "params": {
-                    "expansions": "attachments.media_keys",
-                    "tweet.fields": "attachments,context_annotations,created_at,entities,geo,in_reply_to_user_id,lang,public_metrics,reply_settings,source",
-                    "media.fields": "duration_ms,height,media_key,preview_image_url,type,url,width,public_metrics",
-                }
-            }
             pinned_tweet_id = response_v2["response"]["data"]["pinned_tweet_id"]
-            tweet_endpoint = Api.tweet_lookup(pinned_tweet_id)
-            pinned_tweet = await Request.make(tweet_endpoint, pinned_tweet_options)
-            response_v2["response"]["pinned_tweet"] = pinned_tweet["response"]
+            res = await tweet_lookup(None, pinned_tweet_id)
+            tweet = json.loads(res.content.decode())
+            response_v2["response"]["pinned_tweet"] = tweet
         response_v2["response"]["data"]["profile_banner_url"] = response_v1[
             "response"
         ].get("profile_banner_url", None)
@@ -99,25 +89,39 @@ async def user_followers(request, id, path):
     )
 
 
-# TODO: DONT MAKE REQUEST UNTIL WHOAMI IS CALLED :TODO
-async def user_data(request, sub):
+async def whoami(request):
+    # print()
     if request.method == "GET":
-        url = f"{settings.AUTH0_DOMAIN}/api/v2/users/{sub}"
-        id = sub.split("|")[1]
+        # username = request.user.username
+        # url = f"{settings.SOCIAL_AUTH_AUTH0_DOMAIN}/api/v2/users/{username.replace('.', '|')}"
+        url = f"{settings.SOCIAL_AUTH_AUTH0_DOMAIN}/api/v2/users/twitter|875905303245729793"
+        # id = username.split(".")[1]
+        response = await Request.make(
+            url,
+            {
+                "headers": {
+                    "Authorization": f"Bearer {settings.SOCIAL_AUTH_AUTH0_API_TOKEN}",
+                    "Content-Type": "application/json charset=utf-8",
+                }
+            },
+        )
         try:
             user = await sync_to_async(Account.objects.get, thread_sensitive=True)(
-                twitter_user_id=id
+                twitter_user_id=875905303245729793
             )
+            print(user.twitter_user_id)
         except Account.DoesNotExist:
-            response = await Request.make(
-                url,
-                {
-                    "headers": {
-                        "Authorization": f"Bearer {settings.AUTH0_API_TOKEN}",
-                        "Content-Type": "application/json charset=utf-8",
-                    }
-                },
-            )
+            # response = await Request.make(
+            #     url,
+            #     {
+            #         "headers": {
+            #             "Authorization": f"Bearer {settings.SOCIAL_AUTH_AUTH0_API_TOKEN}",
+            #             "Content-Type": "application/json charset=utf-8",
+            #         }
+            #     },
+            # )
+            # print("response")
+            # print(response)
             if response["status"] == 200:
                 res = response["response"]
                 nickname = res.get("nickname", None)
@@ -127,19 +131,61 @@ async def user_data(request, sub):
                 screen_name = res.get("screen_name", None)
                 twitter_user_id = res["identities"][0]["user_id"]
                 access_token = res["identities"][0]["access_token"]
-                user = await sync_to_async(Account.objects.create, thread_sensitive=True)(
+                access_token_secret = res["identities"][0]["access_token_secret"]
+                user = await sync_to_async(
+                    Account.objects.create, thread_sensitive=True
+                )(
                     nickname=nickname,
                     name=name,
                     picture=picture,
                     twitter_user_id=twitter_user_id,
                     access_token=access_token,
+                    access_token_secret=access_token_secret,
                     last_ip=ip,
                     screen_name=screen_name,
                 )
-        return JsonResponse({"user": user.to_dict()}, safe=False, status=200)
-    return JsonResponse(
-        {"error": {"message": "Bad request", "status": 401}}, status=200
-    )
+                print(res["response"])
+            else:
+                return JsonResponse(
+                    {"response": response["response"]},
+                    safe=False,
+                    status=response["status"],
+                )
+        csrf_token = get_token(request)
+        return JsonResponse(
+            {
+                "user": user.to_dict(),
+                "csrf_token": csrf_token,
+                # "jwt_token": jwt_token,
+            },
+            safe=True,
+            status=200,
+        )
+    return JsonResponse({"message": "Bad request"}, status=400, safe=False)
+
+
+async def users_friendship(request, source_screen_name, target_screen_name):
+    try:
+        url = Api.show_friendship(source_screen_name, target_screen_name)
+        response = await Request.make(url)
+        return JsonResponse(response["response"], safe=False, status=response["status"])
+    except Exception as e:
+        return JsonResponse({"error": e, "status": 500}, status=500)
+
+
+async def create_friendship(request, source_user_id, target_user_id):
+    try:
+        url = Api.create_friendship(source_user_id)
+        body = json.dumps({"target_user_id": target_user_id})
+        response = await Request.make(
+            url,
+            {"method": "POST", "body": body},
+            access_token=request.user.access_token,
+            access_token_secret=request.user.access_token_secret,
+        )
+        return JsonResponse(response["response"], safe=False, status=response["status"])
+    except Exception as e:
+        return JsonResponse({"error": e, "status": 500}, status=500)
 
 
 class GetUserTweetById(View):
@@ -202,6 +248,9 @@ class UserShow(View):
         return JsonResponse(response)
 
 
-def get_csrf_token(request):
-    csrf_token = get_token(request)
-    return JsonResponse({"csrf_token": csrf_token}, safe=False, status=200)
+def get_user_object(id):
+    try:
+        user = Account.objects.get(twitter_user_id=id)
+        return user
+    except Account.DoesNotExist:
+        raise Exception("User not found")
