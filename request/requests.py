@@ -74,6 +74,9 @@ class Request:
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {settings.TWITTER_API_BEARER_TOKEN}",
             }
+            if options.get("headers", None):
+                headers.update(options["headers"])
+            print(headers)
             try:
                 res = None
                 async with aiohttp.ClientSession() as session:

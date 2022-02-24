@@ -28,7 +28,11 @@ class AuthorizationMiddleware:
             user_id = user.username.split(".")[1]
             account = Account.objects.get(twitter_user_id=user_id)
             request.user = account
-        except Exception as e:
+        except Account.DoesNotExist:
+            if request.path == "/2/users/whoami/":
+                request.user.twitter_user_id = user_id
+                pass
+        except (Exception, Account.DoesNotExist) as e:
             if request.path.startswith("/admin/"):
                 pass
             else:

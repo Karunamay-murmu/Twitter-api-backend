@@ -90,38 +90,23 @@ async def user_followers(request, id, path):
 
 
 async def whoami(request):
-    # print()
     if request.method == "GET":
-        # username = request.user.username
-        # url = f"{settings.SOCIAL_AUTH_AUTH0_DOMAIN}/api/v2/users/{username.replace('.', '|')}"
-        url = f"{settings.SOCIAL_AUTH_AUTH0_DOMAIN}/api/v2/users/twitter|875905303245729793"
-        # id = username.split(".")[1]
-        response = await Request.make(
-            url,
-            {
-                "headers": {
-                    "Authorization": f"Bearer {settings.SOCIAL_AUTH_AUTH0_API_TOKEN}",
-                    "Content-Type": "application/json charset=utf-8",
-                }
-            },
-        )
+        id = request.user.twitter_user_id
+        url = f"{settings.SOCIAL_AUTH_AUTH0_DOMAIN}/api/v2/users/twitter|{id}"
+        print(url)
         try:
             user = await sync_to_async(Account.objects.get, thread_sensitive=True)(
-                twitter_user_id=875905303245729793
+                twitter_user_id=id
             )
-            print(user.twitter_user_id)
         except Account.DoesNotExist:
-            # response = await Request.make(
-            #     url,
-            #     {
-            #         "headers": {
-            #             "Authorization": f"Bearer {settings.SOCIAL_AUTH_AUTH0_API_TOKEN}",
-            #             "Content-Type": "application/json charset=utf-8",
-            #         }
-            #     },
-            # )
-            # print("response")
-            # print(response)
+            response = await Request.make(
+                url,
+                {
+                    "headers": {
+                        "Authorization": f"Bearer {settings.SOCIAL_AUTH_AUTH0_API_TOKEN}",
+                    }
+                },
+            )
             if response["status"] == 200:
                 res = response["response"]
                 nickname = res.get("nickname", None)
@@ -144,19 +129,16 @@ async def whoami(request):
                     last_ip=ip,
                     screen_name=screen_name,
                 )
-                print(res["response"])
             else:
                 return JsonResponse(
                     {"response": response["response"]},
                     safe=False,
                     status=response["status"],
                 )
-        csrf_token = get_token(request)
         return JsonResponse(
             {
                 "user": user.to_dict(),
-                "csrf_token": csrf_token,
-                # "jwt_token": jwt_token,
+                "csrf_token": get_token(request),
             },
             safe=True,
             status=200,
@@ -164,11 +146,35 @@ async def whoami(request):
     return JsonResponse({"message": "Bad request"}, status=400, safe=False)
 
 
-async def users_friendship(request, source_screen_name, target_screen_name):
+async def manage_users_friendships(request, source_user_id, target_user_id):
     try:
-        url = Api.show_friendship(source_screen_name, target_screen_name)
-        response = await Request.make(url)
-        return JsonResponse(response["response"], safe=False, status=response["status"])
+        user = request.user
+        friendship = request.GET.get("friendship", "show")
+        if friendship == "show":
+            url = Api.show_friendship(source_user_id, target_user_id)
+            response = await Request.make(url)
+        if friendship == "create":
+            url = Api.create_friendship(source_user_id)
+            body = json.dumps({"target_user_id": target_user_id})
+            response = await Request.make(
+                url,
+                {"method": "POST", "body": body},
+                access_token=user.access_token,
+                access_token_secret=user.access_token_secret,
+            )
+        if friendship == "destroy":
+            url = Api.destroy_friendship(source_user_id, target_user_id)
+            response = await Request.make(
+                url,
+                {"method": "DELETE"},
+                access_token=user.access_token,
+                access_token_secret=user.access_token_secret,
+            )
+        return JsonResponse(
+            response["response"],
+            safe=False,
+            status=response["status"],
+        )
     except Exception as e:
         return JsonResponse({"error": e, "status": 500}, status=500)
 

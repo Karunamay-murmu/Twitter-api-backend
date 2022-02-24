@@ -7,12 +7,11 @@ from users.views import (
     SearchUserByQuery,
     UserShow,
     create_friendship,
+    manage_users_friendships,
     user_by_username,
     user_liked_tweets,
     user_followers,
     whoami,
-    # get_csrf_token,
-    users_friendship
 )
 from tweets.views import user_timeline
 
@@ -29,10 +28,10 @@ urlpatterns = [
     path("<int:id>/<str:path>", user_followers, name="user_followers"),
     path("whoami/", whoami, name="whoami"),
     # path("csrf_token/<str:sub>", get_csrf_token, name="csrf_token"),
-    path("friendships/manage/<str:source_user_id>/<str:target_user_id>", create_friendship, name="create_friendship"),
+    # path("friendships/manage/<str:source_user_id>/<str:target_user_id>", create_friendship, name="create_friendship"),
 
     # v1.1 endpoints
-    path("friendships/show/<str:source_screen_name>/<str:target_screen_name>", users_friendship, name="users_friendship"),
+    path("friendships/manage/<str:source_user_id>/<str:target_user_id>", manage_users_friendships, name="users_friendship"),
     path("search.json", SearchUserByQuery.as_view(), name="search_users"),
     path("show.json", UserShow.as_view(), name="users_show"),
 

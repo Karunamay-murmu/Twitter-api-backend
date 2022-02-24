@@ -63,16 +63,20 @@ class Api:
     def create_friendship(cls, source_user_id):
         return cls.BASE_URL + f"/users/{source_user_id}/following"
 
+    @classmethod
+    def destroy_friendship(cls, source_user_id, target_user_id):
+        return cls.BASE_URL + f"/users/{source_user_id}/following/{target_user_id}"
+
     # v1 endpoints
     @classmethod
     def show_user(cls):
         return cls.BASE_URL_V1 + USERS_SHOW
 
     @classmethod
-    def show_friendship(cls, source_screen_name, target_screen_name):
+    def show_friendship(cls, source_user_id, target_user_id):
         return (
             cls.BASE_URL_V1
-            + f"/friendships/show.json?source_screen_name={source_screen_name}&target_screen_name={target_screen_name}"
+            + f"/friendships/show.json?source_id={source_user_id}&target_id={target_user_id}"
         )
 
     @classmethod

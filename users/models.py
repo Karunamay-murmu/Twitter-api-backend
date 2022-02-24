@@ -14,6 +14,7 @@ class Account(models.Model):
     access_token = models.TextField(blank=False, null=False)
     access_token_secret = models.TextField(blank=False, null=False)
     last_ip = models.GenericIPAddressField(blank=True, null=True)
+    # data = models.ForeignKey("app.Model", verbose_name=_(""), on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
