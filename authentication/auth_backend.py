@@ -1,4 +1,3 @@
-import requests
 from urllib import request
 from jose import jwt
 
@@ -22,13 +21,10 @@ class Auth0(BaseOAuth2):
         return f"{self.setting('DOMAIN')}/oauth/token"
 
     def get_user_details(self, response):
-        # Obtain JWT and the keys to validate the signature
         id_token = response.get("id_token")
-        # jwks = requests.get( "https://" + self.setting("DOMAIN") + "/.well-known/jwks.json")
         jwks = request.urlopen(f"{self.setting('DOMAIN')}/.well-known/jwks.json" )
         issuer = f"{self.setting('DOMAIN')}/"
-        print(issuer)
-        audience = self.setting("KEY")  # CLIENT_ID
+        audience = self.setting("KEY")
         payload = jwt.decode(
             id_token,
             jwks.read(),
@@ -42,5 +38,3 @@ class Auth0(BaseOAuth2):
             "picture": payload["picture"],
             "user_id": payload["sub"],
         }
-
-        # cryptography django djangorestframework django-cors-headers drf-jwt pyjwt requests

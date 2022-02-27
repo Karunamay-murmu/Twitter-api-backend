@@ -238,10 +238,3 @@ class UserShow(View):
         response = Request.make(endpoint, options)
         return JsonResponse(response)
 
-
-# def get_user_object(id):
-#     try:
-#         user = Account.objects.get(twitter_user_id=id)
-#         return user
-#     except Account.DoesNotExist:
-#         raise Exception("User not found")

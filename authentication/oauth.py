@@ -1,7 +1,7 @@
 import requests
 import jwt
 
-from requests_oauthlib import OAuth1, OAuth1Session
+from requests_oauthlib import OAuth1
 from urllib.parse import parse_qs
 
 from django.conf import settings
@@ -11,7 +11,6 @@ class OAuth:
 
     api_key = settings.TWITTER_API_KEY
     api_secret_key = settings.TWITTER_API_SECRET_KEY
-    # callback_url = "http://127.0.0.1:8000/2/oauth2/callback"
     callback_url = "http://localhost:3000/login"
     scope = "+".join([
         "offline.access", "tweet.read", "tweet.write", "tweet.moderate.write",
@@ -25,13 +24,6 @@ class OAuth:
 
     def __init__(self):
         self.oauth = OAuth1(self.api_key, self.api_secret_key)
-
-    def encode_token(self, payload):
-        key = self.api_key
-        return jwt.encode(payload=payload, key=key, algorithm="HS256")
-
-    def decode_token():
-        ...
 
     def get_request_token(self):
         url = "https://api.twitter.com/oauth/request_token"

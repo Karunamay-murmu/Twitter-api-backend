@@ -1,7 +1,5 @@
 from django.conf import settings
 
-from request.endpoints_v2 import USERS_SEARCH, USERS_SHOW, USERS_TIMELINE
-
 
 class Api:
 
@@ -75,7 +73,7 @@ class Api:
     # v1 endpoints
     @classmethod
     def show_user(cls):
-        return cls.BASE_URL_V1 + USERS_SHOW
+        return cls.BASE_URL_V1 + "/users/show.json"
 
     @classmethod
     def show_friendship(cls, source_user_id, target_user_id):
@@ -86,11 +84,11 @@ class Api:
 
     @classmethod
     def search_users(cls):
-        return cls.BASE_URL_V1 + USERS_SEARCH
+        return cls.BASE_URL_V1 + "/users/search.json"
 
     @classmethod
     def users_timeline(cls):
-        return cls.BASE_URL_V1 + USERS_TIMELINE
+        return cls.BASE_URL_V1 + "/statuses/user_timeline.json"
 
     @classmethod
     def users_home_timeline(cls):

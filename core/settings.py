@@ -203,22 +203,11 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "localhost:3000",
 ]
-# CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = None
 
-# CSRF_USE_SESSIONS = True
 # username=admin
 # email=admin@gmail.com
 # password=admin
-
-# JWT_AUTH = {
-#     "JWT_PAYLOAD_GET_USERNAME_HANDLER": "authentication.utils.jwt_get_username_from_payload_handler",
-#     "JWT_DECODE_HANDLER": "authentication.utils.jwt_decode_token",
-#     "JWT_ALGORITHM": "RS256",
-#     "JWT_AUDIENCE": "https://django-twitter2.0/api",
-#     "JWT_ISSUER": SOCIAL_AUTH_AUTH0_DOMAIN,
-#     "JWT_AUTH_HEADER_PREFIX": "Bearer",
-# }
 
 JWT_AUTH = {
     "JWT_PAYLOAD_GET_USERNAME_HANDLER": "authentication.utils.jwt_get_username_from_payload_handler",
