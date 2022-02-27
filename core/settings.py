@@ -203,6 +203,10 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "localhost:3000",
 ]
+# CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = None
+
+# CSRF_USE_SESSIONS = True
 # username=admin
 # email=admin@gmail.com
 # password=admin

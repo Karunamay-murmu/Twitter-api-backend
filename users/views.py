@@ -179,21 +179,6 @@ async def manage_users_friendships(request, source_user_id, target_user_id):
         return JsonResponse({"error": e, "status": 500}, status=500)
 
 
-async def create_friendship(request, source_user_id, target_user_id):
-    try:
-        url = Api.create_friendship(source_user_id)
-        body = json.dumps({"target_user_id": target_user_id})
-        response = await Request.make(
-            url,
-            {"method": "POST", "body": body},
-            access_token=request.user.access_token,
-            access_token_secret=request.user.access_token_secret,
-        )
-        return JsonResponse(response["response"], safe=False, status=response["status"])
-    except Exception as e:
-        return JsonResponse({"error": e, "status": 500}, status=500)
-
-
 class GetUserTweetById(View):
     def get(self, request, id):
         endpoint_v1 = Api.users_timeline()
@@ -254,9 +239,9 @@ class UserShow(View):
         return JsonResponse(response)
 
 
-def get_user_object(id):
-    try:
-        user = Account.objects.get(twitter_user_id=id)
-        return user
-    except Account.DoesNotExist:
-        raise Exception("User not found")
+# def get_user_object(id):
+#     try:
+#         user = Account.objects.get(twitter_user_id=id)
+#         return user
+#     except Account.DoesNotExist:
+#         raise Exception("User not found")

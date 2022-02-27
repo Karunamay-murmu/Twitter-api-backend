@@ -1,3 +1,5 @@
+import json
+
 from django.http.response import JsonResponse
 
 from request.api import Api
@@ -28,33 +30,76 @@ async def tweet_lookup(request, id):
         if response["status"] == 200:
             return JsonResponse(response["response"], safe=False, status=200)
     except:
-        return JsonResponse({
-            "error": {
-                "message": "Error occured while fetching data",
-                "status": 500
-            }
-        }, status=500)
+        return JsonResponse(
+            {"error": {"message": "Error occured while fetching data", "status": 500}},
+            status=500,
+        )
 
 
-async def tweets_lookup(request):
-    url = Api.tweets_lookup([1482375313598423043])
-    params = {
-        "tweet.fields": "id,text,author_id,created_at,in_reply_to_user_id,conversation_id,lang,referenced_tweets",
-        "expansions": "author_id,in_reply_to_user_id,referenced_tweets.id,referenced_tweets.id.author_id",
-        "user.fields": "name,username",
-    }
-    options = {
-        "params": params,
-    }
-    response = await Request.make(url, options)
-    if response["status"] == 200:
-        return JsonResponse(response["response"], safe=False, status=200)
-    return JsonResponse({
-        "error": {
-            "message": "Error occured while fetching data",
-            "status": 500
-        }
-    }, status=500)
+async def manage_tweet(request):
+    data = json.loads(request.body)
+    try:
+        user = request.user
+        url = Api.manage_tweet()
+        body = {"text": data.get("text", "")}
+        if data.get("reply"):
+            body.update(
+                {
+                    "reply": {
+                        "in_reply_to_tweet_id": data.get("reply", {}).get(
+                            "in_reply_to_tweet_id", ""
+                        ),
+                        "exclude_reply_user_ids": data.get("reply", {}).get(
+                            "exclude_reply_user_ids", ""
+                        ),
+                    }
+                }
+            )
+        if data.get("media"):
+            body.update(
+                {
+                    "media": {
+                        "media_ids": data.get("media", {}).get("media_ids", ""),
+                        "tagged_user_ids": data.get("media", {}).get(
+                            "tagged_user_ids", ""
+                        ),
+                    }
+                }
+            )
+        response = await Request.make(
+            url,
+            {
+                "method": "POST",
+                "body": json.dumps(body),
+            },
+            access_token=user.access_token,
+            access_token_secret=user.access_token_secret,
+        )
+        print(response)
+        return JsonResponse(response["response"], safe=False, status=response["status"])
+    except Exception as e:
+        return JsonResponse({"error": e, "status": 500}, status=500)
+
+
+# async def tweets_lookup(request):
+#     url = Api.tweets_lookup([1482375313598423043])
+#     params = {
+#         "tweet.fields": "id,text,author_id,created_at,in_reply_to_user_id,conversation_id,lang,referenced_tweets",
+#         "expansions": "author_id,in_reply_to_user_id,referenced_tweets.id,referenced_tweets.id.author_id",
+#         "user.fields": "name,username",
+#     }
+#     options = {
+#         "params": params,
+#     }
+#     response = await Request.make(url, options)
+#     if response["status"] == 200:
+#         return JsonResponse(response["response"], safe=False, status=200)
+#     return JsonResponse({
+#         "error": {
+#             "message": "Error occured while fetching data",
+#             "status": 500
+#         }
+#     }, status=500)
 
 
 async def user_timeline(request, id):
@@ -72,65 +117,23 @@ async def user_timeline(request, id):
     response_v2 = await Request.make(url, options)
     if response_v2["status"] == 200:
         return JsonResponse(response_v2["response"], safe=False, status=200)
-    return JsonResponse({
-        "error": {
-            "message": "Error occured while fetching data",
-            "status": 500
-        }
-    }, status=500)
+    return JsonResponse(
+        {"error": {"message": "Error occured while fetching data", "status": 500}},
+        status=500,
+    )
 
 
 async def tweet_search_with_replies(request, id, username):
     url = Api.tweet_search()
     params["query"] = f"conversation_id:{id} is:reply"
     params["max_results"] = 30
-    # params["since_id"] = 1487921982066855940
     options = {
         "params": params,
     }
     response = await Request.make(url, options)
-    # tweet = await tweet_lookup(request, id)
-    # print(tweet)
     if response["status"] == 200:
         return JsonResponse(response["response"], safe=False, status=200)
-    return JsonResponse({
-        "error": {
-            "message": "Error occured while fetching data",
-            "status": 500
-        }
-    }, status=500)
-
-
-# try:
-#     tweets = response_v2["response"]["data"]
-#     tweets_id = []
-#     for tweet in tweets:
-#         tweets_id.append(tweet["id"])
-#     ref_tweets = response_v2["response"]["includes"]["tweets"]
-
-#     # async def collect_ref_tweets(ref_tweets):
-#     ids = []
-#     for tweet in ref_tweets:
-#         if "referenced_tweets" in tweet:
-#             for ref in tweet["referenced_tweets"]:
-#                 id = ref["id"]
-#                 if id not in tweets_id:
-#                     ids.append(ref["id"])
-#     if len(ids) > 0:
-#         url = Api.tweets_lookup(ids)
-#         options = {
-#             "params": params,
-#         }
-#         response = await Request.make(url, options)
-#         if response["status"] == 200:
-#             print(response["response"]["data"])
-#             response_v2["response"]["data"].append(*response["response"]["data"])
-#             response_v2["response"]["includes"]["users"].append(*response["response"]["includes"]["users"])
-#             response_v2["response"]["includes"]["tweets"].append(*response["response"]["includes"]["tweets"])
-#         else:
-#             pass
-#     return JsonResponse(response["response"], safe=False, status=200)
-#     # await collect_ref_tweets(ref_tweets)
-# except Exception:
-#     print("error")
-#     pass
+    return JsonResponse(
+        {"error": {"message": "Error occured while fetching data", "status": 500}},
+        status=500,
+    )

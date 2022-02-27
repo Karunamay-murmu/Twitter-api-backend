@@ -67,6 +67,11 @@ class Api:
     def destroy_friendship(cls, source_user_id, target_user_id):
         return cls.BASE_URL + f"/users/{source_user_id}/following/{target_user_id}"
 
+    @classmethod
+    def manage_tweet(cls):
+        return cls.BASE_URL + "/tweets"
+
+
     # v1 endpoints
     @classmethod
     def show_user(cls):

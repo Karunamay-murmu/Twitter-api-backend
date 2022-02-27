@@ -1,22 +1,9 @@
-from ast import Raise
-from email import header
-from os import access
-from webbrowser import get
-from click import option
-import requests
 import asyncio
 import aiohttp
-import json
-import urllib.parse
 
 from django.conf import settings
 
-from requests_oauthlib import OAuth1
-
-# from aioauth_client import TwitterClient, OAuth1Client
-
 import oauthlib.oauth1
-
 
 from users.models import Account
 
@@ -30,17 +17,6 @@ def get_user_object(id):
 
 
 class Request:
-
-    options = {
-        "method": "GET",
-        "params": {},
-        "data": {},
-        "headers": {
-            "Authorization": f"Bearer {settings.TWITTER_API_BEARER_TOKEN}",
-        },
-        "timeout": 20,
-    }
-
     @staticmethod
     def oauth_session(access_token, access_token_secret):
         twitter_oauth = oauthlib.oauth1.Client(
@@ -64,7 +40,6 @@ class Request:
 
     @classmethod
     def make(cls, url, options={}, access_token=None, access_token_secret=None):
-        # options = cls.request_options(cls.options, extra_options)
         async def fetch_data():
             uri = url
             method = options.get("method", "GET")
@@ -76,7 +51,6 @@ class Request:
             }
             if options.get("headers", None):
                 headers.update(options["headers"])
-            print(headers)
             try:
                 res = None
                 async with aiohttp.ClientSession() as session:
@@ -110,8 +84,3 @@ class Request:
                 await session.close()
 
         return fetch_data()
-        # return fetch_data()
-
-        # response = requests.request(url=url, **cls.options)
-        # print(response)
-        # return response.json()
