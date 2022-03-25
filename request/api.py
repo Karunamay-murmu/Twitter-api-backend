@@ -66,9 +66,24 @@ class Api:
         return cls.BASE_URL + f"/users/{source_user_id}/following/{target_user_id}"
 
     @classmethod
+    def mute_friendship(cls, source_user_id):
+        return cls.BASE_URL + f"/users/{source_user_id}/muting"
+
+    @classmethod
+    def unmute_friendship(cls, source_user_id, target_user_id):
+        return cls.BASE_URL + f"/users/{source_user_id}/muting/{target_user_id}"
+
+    @classmethod
+    def block_friendship(cls, source_user_id):
+        return cls.BASE_URL + f"/users/{source_user_id}/blocking"
+
+    @classmethod
+    def unblock_friendship(cls, source_user_id, target_user_id):
+        return cls.BASE_URL + f"/users/{source_user_id}/blocking/{target_user_id}"
+
+    @classmethod
     def manage_tweet(cls):
         return cls.BASE_URL + "/tweets"
-
 
     # v1 endpoints
     @classmethod
@@ -76,11 +91,12 @@ class Api:
         return cls.BASE_URL_V1 + "/users/show.json"
 
     @classmethod
-    def show_friendship(cls, source_user_id, target_user_id):
-        return (
-            cls.BASE_URL_V1
-            + f"/friendships/show.json?source_id={source_user_id}&target_id={target_user_id}"
-        )
+    def friendship_lookup(cls):
+        return cls.BASE_URL_V1 + "/friendships/lookup.json"
+
+    @classmethod
+    def friendship_show(cls):
+        return cls.BASE_URL_V1 + f"/friendships/show.json"
 
     @classmethod
     def search_users(cls):

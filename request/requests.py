@@ -5,16 +5,6 @@ from django.conf import settings
 
 import oauthlib.oauth1
 
-from users.models import Account
-
-
-def get_user_object(id):
-    try:
-        user = Account.objects.get(twitter_user_id=id)
-        return user
-    except Account.DoesNotExist:
-        raise Exception("User not found")
-
 
 class Request:
     @staticmethod
@@ -42,14 +32,14 @@ class Request:
     def make(cls, url, options={}, access_token=None, access_token_secret=None):
         async def fetch_data():
             uri = url
-            method = options.get("method", "GET")
-            body = options.get("body", None)
-            params = options.get("params", {})
             headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {settings.TWITTER_API_BEARER_TOKEN}",
             }
-            if options.get("headers", None):
+            method = options.get("method", "GET")
+            body = options.get("body", None)
+            params = options.get("params", {})
+            if "headers" in options:
                 headers.update(options["headers"])
             try:
                 res = None
@@ -79,7 +69,6 @@ class Request:
                     return {"response": res, "status": response.status}
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 raise Exception("Error occured while fetching data")
-
             finally:
                 await session.close()
 

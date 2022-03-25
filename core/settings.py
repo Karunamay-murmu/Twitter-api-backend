@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     # "social_django",
     "rest_framework",
     "rest_framework_jwt",
-    "rest_framework_jwt.blacklist",
     # Application
     "users",
     "authentication",
@@ -159,13 +158,6 @@ STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework_simplejwt.authentication.JWTAuthentication',
-#     )
-# }
-
-
 # Twitter api credentials
 
 TWITTER_API_KEY = str(os.getenv("TWITTER_API_KEY"))
@@ -204,10 +196,6 @@ CSRF_TRUSTED_ORIGINS = [
     "localhost:3000",
 ]
 CSRF_COOKIE_SAMESITE = None
-
-# username=admin
-# email=admin@gmail.com
-# password=admin
 
 JWT_AUTH = {
     "JWT_PAYLOAD_GET_USERNAME_HANDLER": "authentication.utils.jwt_get_username_from_payload_handler",
